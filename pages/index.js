@@ -1,11 +1,14 @@
 import { Inter } from 'next/font/google'
 import { useState } from "react";
 import { CldImage } from 'next-cloudinary';
+import {Avatar, Button, Heading, Text} from "evergreen-ui";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home({ folders }) {
   const [images, setImages] = useState([]);
+  const [total, setTotal] = useState([]);
+  const [cursor, setNextCursor] = useState('');
   const [activeFolder, setActiveFolder] = useState('');
 
   async function handleButtonClick(event) {
@@ -16,17 +19,46 @@ export default function Home({ folders }) {
       body: JSON.stringify({
         expression: `folder=${path}`
       })
-    }).then(r => r.json())
+    }).then(r => r.json());
     console.log(results);
-    setImages(results.resources)
+    setImages(results.resources);
+    setTotal(results.total_count);
+    setNextCursor(results.next_cursor);
     setActiveFolder(path);
   }
+
+  // async function handleLoadMore(e) {
+  //   e.preventDefault();
+  //   const dataCursor = e.target.getAttribute('data-cursor');
+  //   const dataFolder = e.target.getAttribute('data-folder');
+  //   const results = await fetch('/api/load', {
+  //     method: 'POST',
+  //     body: JSON.stringify({
+  //       expression: `folder=""${dataFolder}`,
+  //       nextCursor: dataCursor
+  //     })
+  //   }).then(r => r.json());
+  //
+  //   const { resources } = results;
+  //
+  //   // const images = mapImageResources(resources);
+  //
+  //   console.log('images', 'resources');
+  //   console.log('images', resources);
+  // }
 
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
     >
-      <div className="z-10 w-full max-w-5xl justify-between font-mono text-sm lg:flex">Red Pandas Practice</div>
+      <div className="z-10 w-full max-w-5xl justify-between font-mono text-sm lg:flex">
+        <Avatar
+          src="red-panda-logo.png"
+          name="Red Panda"
+          size={40}
+        />
+        <Heading is="h1" size={900} color="muted">Red Pandas Practice</Heading>
+      </div>
       <div className="z-10 w-full max-w-5xl justify-between font-mono text-sm lg:flex">
         <ul className="flex space-x-8">
           {folders.map((folder) => (
@@ -37,6 +69,11 @@ export default function Home({ folders }) {
             </li>
           ))}
         </ul>
+      </div>
+      <div>
+        {
+          images.length > 0 && <Text size={400}>Images {activeFolder} showing {images.length} images of {total}</Text>
+        }
       </div>
       <div>
         <ul className="flex flex-wrap">
@@ -50,6 +87,11 @@ export default function Home({ folders }) {
           })}
         </ul>
       </div>
+      {/*<div>*/}
+      {/*  <Button data-cursor={cursor} data-folder={activeFolder} marginRight={16} appearance="primary" onClick={handleLoadMore}>*/}
+      {/*    Load More*/}
+      {/*  </Button>*/}
+      {/*</div>*/}
     </main>
   )
 }
