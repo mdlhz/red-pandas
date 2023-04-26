@@ -1,7 +1,7 @@
 import { Inter } from 'next/font/google'
 import { useState } from "react";
 import { CldImage } from 'next-cloudinary';
-import {Avatar, Button, Heading, Text} from "evergreen-ui";
+import {Avatar, Button, Dialog, Heading, Text} from "evergreen-ui";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -9,7 +9,11 @@ export default function Home({ folders }) {
   const [images, setImages] = useState([]);
   const [total, setTotal] = useState([]);
   const [cursor, setNextCursor] = useState('');
+  const [isShown, setIsShown] = useState(false);
   const [activeFolder, setActiveFolder] = useState('');
+  const [dialogImageUrl, setDialogImageUrl] = useState('');
+  const [dialogImageWidth, setDialogImageWidth] = useState(500);
+  const [dialogImageHeight, setDialogImageHeight] = useState(500);
 
   async function handleButtonClick(event) {
     event.preventDefault();
@@ -47,6 +51,18 @@ export default function Home({ folders }) {
   //   console.log('images', resources);
   // }
 
+  function handleImageClick(e) {
+    e.preventDefault();
+    const imgUrl = e.target.getAttribute('data-url');
+    const imgWidth = e.target.getAttribute('data-width');
+    const imgHeight = e.target.getAttribute('data-height');
+    console.log(imgUrl);
+    setDialogImageUrl(imgUrl);
+    setDialogImageHeight(imgHeight);
+    setDialogImageWidth(imgWidth);
+    setIsShown(true);
+  }
+
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
@@ -76,13 +92,34 @@ export default function Home({ folders }) {
         }
       </div>
       <div>
+        <Dialog
+          isShown={isShown}
+          title="Right click to download high resolution image"
+          onCloseComplete={() => setIsShown(false)}
+          confirmLabel="Download"
+          width={dialogImageWidth}
+          topOffset='100'
+          hasFooter={false}
+        >
+          <img src={dialogImageUrl} width={dialogImageWidth} height={dialogImageHeight} alt={activeFolder}/>S
+        </Dialog>
         <ul className="flex flex-wrap">
           {images.map(image => {
             return (
-              <li key={image.asset_id}>
-                <CldImage width="400" height="400" crop="thumb"
-                          gravity="faces" src={image.public_id} alt={image.folder} />
-              </li>
+              <>
+                <li onClick={handleImageClick} key={image.asset_id}>
+                  <CldImage
+                    data-url={image.secure_url}
+                    data-width={image.width}
+                    data-height={image.height}
+                    width="400"
+                    height="400"
+                    crop="thumb"
+                    gravity="faces"
+                    src={image.public_id}
+                    alt={image.folder} />
+                </li>
+              </>
             )
           })}
         </ul>
