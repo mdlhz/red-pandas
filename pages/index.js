@@ -76,9 +76,9 @@ export default function Home({ folders }) {
         <Heading is="h1" size={900} color="muted">Red Pandas Practice</Heading>
       </div>
       <div className="z-10 w-full max-w-5xl justify-between font-mono text-sm lg:flex">
-        <ul className="flex space-x-8">
+        <ul className="z-10 columns-4 max-w-5xl justify-between font-mono text-sm lg:flex">
           {folders.map((folder) => (
-            <li key={folder.path} >
+            <li className="pt-10 px-10" key={folder.path} >
               <button data-path={folder.path} onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 {folder.name}
               </button>
