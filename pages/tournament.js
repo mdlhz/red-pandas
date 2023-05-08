@@ -5,10 +5,10 @@ import {Avatar, Button, Dialog, Heading, Text} from "evergreen-ui";
 
 const inter = Inter({ subsets: ['latin'] })
 
-export default function Home({ folders }) {
-  const [images, setImages] = useState([]);
+export default function Home({ resources, count, cursor }) {
+  const [images, setImages] = useState(resources);
   const [total, setTotal] = useState([]);
-  const [cursor, setNextCursor] = useState('');
+  const [nextCursor, setNextCursor] = useState(cursor);
   const [isShown, setIsShown] = useState(false);
   const [activeFolder, setActiveFolder] = useState('');
   const [dialogImageUrl, setDialogImageUrl] = useState('');
@@ -17,21 +17,37 @@ export default function Home({ folders }) {
 
   async function handleButtonClick(event) {
     event.preventDefault();
-    const path = event.target.getAttribute('data-path');
+    const path = 'tournament'
     const results = await fetch('/api/cloudinary/', {
       method: 'POST',
       body: JSON.stringify({
         expression: `folder=${path}`
       })
     }).then(r => r.json());
-    console.log(results);
+
     setImages(results.resources);
     setTotal(results.total_count);
     setNextCursor(results.next_cursor);
     setActiveFolder(path);
   }
 
+  async function handleLoadMore(e) {
+    e.preventDefault();
+    const dataCursor = e.target.getAttribute('data-cursor');
+    const dataFolder = 'Karate/tournament';
+    const results = await fetch('/api/cloudinary', {
+      method: 'POST',
+      body: JSON.stringify({
+        expression: `folder=""${dataFolder}`,
+        nextCursor: dataCursor
+      })
+    }).then(r => r.json());
 
+    const { resources, next_cursor } = results;
+
+    setImages(images => images.concat(resources));
+    setNextCursor(next_cursor)
+  }
   function handleImageClick(e) {
     e.preventDefault();
     const imgUrl = e.target.getAttribute('data-url');
@@ -54,22 +70,11 @@ export default function Home({ folders }) {
           name="Red Panda"
           size={40}
         />
-        <Heading is="h1" size={900} color="muted">Red Pandas Practice</Heading>
-      </div>
-      <div className="z-10 w-full max-w-5xl justify-between font-mono text-sm lg:flex">
-        <ul className="z-10 columns-2 max-w-5xl justify-between font-mono text-sm lg:flex">
-          {folders.map((folder) => (
-            <li className="pt-10 px-10" key={folder.path} >
-              <button data-path={folder.path} onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                {folder.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Heading is="h1" size={900} color="muted">Red Pandas Tournament</Heading>
       </div>
       <div>
         {
-          images.length > 0 && <Text size={400}>Images {activeFolder} showing {images.length} images of {total}</Text>
+          images.length > 0 && <Text size={400}>Images Karate/tournament showing {resources.length} images of 1200</Text>
         }
       </div>
       <div>
@@ -105,26 +110,34 @@ export default function Home({ folders }) {
           })}
         </ul>
       </div>
-      {/*<div>*/}
-      {/*  <Button data-cursor={cursor} data-folder={activeFolder} marginRight={16} appearance="primary" onClick={handleLoadMore}>*/}
-      {/*    Load More*/}
-      {/*  </Button>*/}
-      {/*</div>*/}
+      <div>
+        <Button data-cursor={nextCursor} data-folder="Karate/tournament" marginRight={16} appearance="primary" onClick={handleLoadMore}>
+          Load More
+        </Button>
+      </div>
     </main>
   )
 }
 
 export async function getStaticProps(context) {
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/folders/Karate/Practice`, {
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/resources/search`, {
+    method: 'POST',
     headers: {
       Authorization: `Basic ${Buffer.from(process.env.API_KEY + ":" + process.env.API_SECRET).toString('base64')}`
-    }
+    },
+    body: JSON.stringify({
+      'expression': 'folder=tournament',
+    })
   });
-  const folders = await res.json()
-
+  const images = await res.json()
+  console.log(images.total_count);
+  // console.log(images.resources);
   return ({
     props: {
-      folders: folders.folders
+      resources: images.resources,
+      count: images.total_count,
+      cursor: images.next_cursor
     },
   });
 }
